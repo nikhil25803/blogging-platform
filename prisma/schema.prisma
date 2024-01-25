@@ -1,0 +1,12 @@
+// Generators
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Data Sources
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
