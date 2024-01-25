@@ -19,5 +19,5 @@ userRouter.post("/register", createUser);
 // User login
 userRouter.get("/login", userLogin);
 
-// Get user details
+// Read, and delete user
 userRouter.get("/:username", authenticateToken, getUserDetails);

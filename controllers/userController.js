@@ -111,11 +111,13 @@ export const userLogin = asyncHandler(async (req, res) => {
 
 // Get User Details
 export const getUserDetails = asyncHandler(async (req, res) => {
-  // Get username from pathn params
+  // Get username from path params
   const username = req.params.username;
 
-  if (!username) {
-    res.status(400).json({ message: "Username not provided" });
+  if (username !== req.user.username) {
+    res.status(401).json({
+      message: `Username: ${username} is either not loggedin or incorrect`,
+    });
   }
 
   // Check if user xists
@@ -134,6 +136,6 @@ export const getUserDetails = asyncHandler(async (req, res) => {
         .json({ message: `No user found with username: ${username}` });
     }
   } catch (error) {
-    res.status(500).json({ message: "Unable to query user" });
+    res.status(500).json({ message: `Unable to query user.\nError: ${error}` });
   }
 });
