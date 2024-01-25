@@ -52,8 +52,9 @@ export const userLogin = asyncHandler(async (req, res) => {
 
   // If both fields are not required
   if (!username || !password) {
-    res.status(400);
-    throw new Error("Both fields are required");
+    res
+      .status(400)
+      .json({ message: "Both username and password is required to login." });
   }
 
   try {
@@ -105,5 +106,34 @@ export const userLogin = asyncHandler(async (req, res) => {
     }
   } catch (error) {
     throw new Error("Unable to login user");
+  }
+});
+
+// Get User Details
+export const getUserDetails = asyncHandler(async (req, res) => {
+  // Get username from pathn params
+  const username = req.params.username;
+
+  if (!username) {
+    res.status(400).json({ message: "Username not provided" });
+  }
+
+  // Check if user xists
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        username,
+      },
+    });
+
+    if (user) {
+      res.status(200).json({ message: "User data fetched", data: user });
+    } else {
+      res
+        .status(404)
+        .json({ message: `No user found with username: ${username}` });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Unable to query user" });
   }
 });

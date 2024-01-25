@@ -5,6 +5,7 @@ import "dotenv/config";
 export function authenticateToken(req, res, next) {
   // Get the bearer token from the headers
   const authHeader = req.headers["authorization"];
+
   const token = authHeader && authHeader.split(" ")[1];
 
   if (token == null) {
