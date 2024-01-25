@@ -10,3 +10,36 @@ datasource db {
 }
 
 // User Model
+model User {
+  uid            String   @id
+  username       String   @unique
+  name           String
+  email          String   @unique
+  hashedpassword String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt()
+  blogsWritten   Blog[]
+}
+
+// Category Model
+model Category {
+  cid   String @id
+  name  String
+  blogs Blog[]
+}
+
+// Blog Posts Model
+model Blog {
+  bid         String   @id
+  title       String
+  content     String
+  views       Int      @default(0)
+  likes       Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [uid])
+  authorId    String
+  category    Category @relation(fields: [categoryId], references: [cid])
+  categoryId  String
+}
