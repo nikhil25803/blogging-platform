@@ -17,11 +17,22 @@ const updateBlogScehma = Joi.object({
   content: Joi.string().optional(),
 });
 
+// Schema to create blog
+const createBlogSchema = Joi.object({
+  title: Joi.string().required(),
+  content: Joi.string().required(),
+});
+
 // Define router
 export const blogRouter = express.Router();
 
 // Create new blog
-blogRouter.post("/create", authenticateToken, createNewBlog);
+blogRouter.post(
+  "/create",
+  authenticateToken,
+  validateBody(createBlogSchema),
+  createNewBlog
+);
 
 // Get all blogs
 blogRouter.get("/all", redisCache.route(), getAllBlogs);

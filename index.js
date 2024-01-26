@@ -38,7 +38,7 @@ app.use(limiter); // Applied rate limiter
 
 // Ping Test
 app.get("/", (req, res) => {
-  res.send("Hello World".repeat(100000));
+  res.status(200).json({ message: "Server is up and running" });
 });
 
 // Add Routers
