@@ -1,6 +1,7 @@
 import asynchandler from "express-async-handler";
 import { prisma } from "../db/dbConfig.js";
 import { ObjectId } from "bson";
+import { redisCache } from "../config/redis.config.js";
 
 export const createNewBlog = asynchandler(async (req, res) => {
   // Get user data from token
@@ -41,6 +42,15 @@ export const createNewBlog = asynchandler(async (req, res) => {
           },
         },
       },
+    });
+
+    // Clear cache to fetch latest results
+    redisCache.del("/api/blog/all", (err) => {
+      if (err) {
+        res
+          .status(500)
+          .json({ message: `Unable to create new blog.\nError: ${error}` });
+      }
     });
 
     res.status(200).json({ message: "New blog created", data: newBlog });

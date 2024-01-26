@@ -9,6 +9,7 @@ import {
 import { authenticateToken } from "../middlewares/jwtTokenVerification.js";
 import Joi from "joi";
 import { validateBody } from "../middlewares/requestValidator.js";
+import { redisCache } from "../config/redis.config.js";
 
 // Schema for validation
 const updateBlogScehma = Joi.object({
@@ -23,7 +24,7 @@ export const blogRouter = express.Router();
 blogRouter.post("/create", authenticateToken, createNewBlog);
 
 // Get all blogs
-blogRouter.get("/all", getAllBlogs);
+blogRouter.get("/all", redisCache.route(), getAllBlogs);
 
 // Update Blog
 blogRouter.put(
