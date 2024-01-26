@@ -3,6 +3,7 @@ import "dotenv/config";
 import bodyParser from "body-parser";
 import { userRouter } from "./routes/userRouter.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import { blogRouter } from "./routes/blogRoutes.js";
 
 // Initialize application
 const app = express();
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
 
 // Add Routers
 app.use("/api/user", userRouter);
+app.use("/api/blog", blogRouter);
 
 // Listen app to defined PORT
 app.listen(PORT, () => {

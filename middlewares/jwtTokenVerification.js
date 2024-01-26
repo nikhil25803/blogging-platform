@@ -9,12 +9,14 @@ export function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(" ")[1];
 
   if (token == null) {
-    return res.sendStatus(401);
+    return res.status(400).json({ message: "JWT Token not provided." });
   }
 
   jwt.verify(token, process.env.JWT_ACCESS_TOKEN, (err, user) => {
     if (err) {
-      return res.sendStatus(404);
+      return res
+        .status(404)
+        .json({ message: "JWT Token has been expired or incorrect." });
     }
     req.user = user.user;
   });

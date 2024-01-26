@@ -4,11 +4,6 @@ import { ObjectId } from "bson";
 import { prisma } from "../db/dbConfig.js";
 import jwt from "jsonwebtoken";
 
-// Test Controller
-export const testMiddleware = asyncHandler(async (req, res) => {
-  res.json({ message: "listening to user route" });
-});
-
 // Add new user
 export const createUser = asyncHandler(async (req, res) => {
   // Accept Body Parameter
@@ -114,6 +109,7 @@ export const getUserDetails = asyncHandler(async (req, res) => {
   // Get username from path params
   const username = req.params.username;
 
+  // Check is user is authenticated or not
   if (username !== req.user.username) {
     res.status(401).json({
       message: `Username: ${username} is either not loggedin or incorrect`,
@@ -125,6 +121,13 @@ export const getUserDetails = asyncHandler(async (req, res) => {
     const user = await prisma.user.findUnique({
       where: {
         username,
+      },
+      select: {
+        uid: true,
+        username: true,
+        name: true,
+        email: true,
+        blogsWritten: true,
       },
     });
 
@@ -138,4 +141,43 @@ export const getUserDetails = asyncHandler(async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: `Unable to query user.\nError: ${error}` });
   }
+});
+
+// Get all blogs written by the user
+export const blogsByUser = asyncHandler(async (req, res) => {
+  // Get user details from the token
+  const userData = req.user;
+
+  // Get username from params
+  const username = req.params.username;
+
+  // Check is user is authenticated or not
+  if (username !== userData.username) {
+    res.status(401).json({
+      message: `Username: ${username} is either not loggedin or incorrect`,
+    });
+  }
+
+  // Query on DB
+  const userBlogs = await prisma.blog.findMany({
+    where: {
+      authorId: userData.uid,
+    },
+    select: {
+      title: true,
+      content: true,
+      views: true,
+      likes: true,
+      category: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  res.status(200).json({
+    message: "All blogs written by the user has been fetched",
+    data: userBlogs,
+  });
 });

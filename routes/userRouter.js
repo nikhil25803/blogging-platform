@@ -1,17 +1,14 @@
 import express from "express";
 import {
+  blogsByUser,
   createUser,
   getUserDetails,
-  testMiddleware,
   userLogin,
 } from "../controllers/userController.js";
 import { authenticateToken } from "../middlewares/jwtTokenVerification.js";
 
 // Define router
 export const userRouter = express.Router();
-
-// Test Route
-userRouter.get("/", testMiddleware);
 
 // Register new user
 userRouter.post("/register", createUser);
@@ -21,3 +18,6 @@ userRouter.get("/login", userLogin);
 
 // Read, and delete user
 userRouter.get("/:username", authenticateToken, getUserDetails);
+
+// BLogs written by user
+userRouter.get("/:username/blog/all", authenticateToken, blogsByUser);
