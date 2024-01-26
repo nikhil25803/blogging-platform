@@ -4,5 +4,5 @@ export const redisCache = redis({
   port: 6379,
   host: "localhost",
   prefix: "Blog API",
-  expire: 60 * 60,
+  expire: 5 * 60,
 });

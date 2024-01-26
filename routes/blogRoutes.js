@@ -3,6 +3,7 @@ import {
   createNewBlog,
   deleteBlog,
   getAllBlogs,
+  queryTopNBlogs,
   readBlog,
   updateBlog,
 } from "../controllers/blogController.js";
@@ -49,4 +50,7 @@ blogRouter.put(
 blogRouter.delete("/delete", authenticateToken, deleteBlog);
 
 // Read a blog
-blogRouter.get("/", readBlog);
+blogRouter.get("/", redisCache.route(), readBlog);
+
+// Query blogs
+blogRouter.get("/query", queryTopNBlogs);

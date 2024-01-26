@@ -132,6 +132,15 @@ export const updateBlog = asynchandler(async (req, res) => {
       },
     });
 
+    // Clear cache for this route
+    redisCache.del(`/api/blog?blogid=${blogId}`, (err) => {
+      if (err) {
+        res
+          .status(500)
+          .json({ message: `Unable to create new blog.\nError: ${error}` });
+      }
+    });
+
     // Response
     res.status(200).json({
       message: "Blog has been updated successfully.",
@@ -182,53 +191,108 @@ export const deleteBlog = asynchandler(async (req, res) => {
 
 // Read a blog
 export const readBlog = asynchandler(async (req, res) => {
-  // Get blog id from query param
-  const blogId = req.query.blogid;
+  // Get query parameters
+  const queryParams = req.query;
 
-  if (!blogId) {
-    res.status(400).json({ message: "Please provide blog id" });
-  }
-
-  // Query the blog in the database
-  const blogData = await prisma.blog.findUnique({
-    where: {
-      bid: blogId,
-    },
-    select: {
-      title: true,
-      content: true,
-      views: true,
-      author: {
+  if (queryParams.mostviewed && queryParams.mostviewed === "true") {
+    // Query the most viewed blog from the DB
+    try {
+      const popularBlog = await prisma.blog.findFirst({
+        orderBy: [
+          {
+            views: "desc",
+          },
+        ],
         select: {
-          username: true,
-          name: true,
-          email: true,
+          title: true,
+          content: true,
+          views: true,
+          author: {
+            select: {
+              username: true,
+              name: true,
+              email: true,
+            },
+          },
+          category: {
+            select: {
+              name: true,
+            },
+          },
         },
-      },
-      category: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+      });
 
-  if (blogData) {
-    // If the blog has been read, increase views count
-    await prisma.blog.update({
+      // Return the response
+      return res.status(200).json({
+        message: "Most popular blogs has been fetched",
+        data: popularBlog,
+      });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: `Unable to fetch mostviewed blog.\nError: ${error}` });
+    }
+  } else if (queryParams.blogid) {
+    const blogId = queryParams.blogid;
+
+    // Query the blog in the database
+    const blogData = await prisma.blog.findUnique({
       where: {
         bid: blogId,
       },
-      data: {
-        views: blogData.views + 1,
+      select: {
+        title: true,
+        content: true,
+        views: true,
+        author: {
+          select: {
+            username: true,
+            name: true,
+            email: true,
+          },
+        },
+        category: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
-    res
-      .status(200)
-      .json({ message: "Blog data has been fetched.", data: blogData });
+
+    if (blogData) {
+      // If the blog has been read, increase views count
+      await prisma.blog.update({
+        where: {
+          bid: blogId,
+        },
+        data: {
+          views: blogData.views + 1,
+        },
+      });
+      res
+        .status(200)
+        .json({ message: "Blog data has been fetched.", data: blogData });
+    } else {
+      res
+        .status(500)
+        .json({ message: `Unable to fetch blog details.\nError: ${error}` });
+    }
   } else {
-    res
-      .status(500)
-      .json({ message: `Unable to fetch blog details.\nError: ${error}` });
+    return res.status(400).json({
+      message:
+        "Please provide one of the query parameters. (mostviewed / blogid)",
+    });
   }
+});
+
+// Query Top N Blogs
+export const queryTopNBlogs = asynchandler(async (req, res) => {
+  // Get the query parameters
+  const queryParams = req.query;
+
+  console.log(Object.keys(queryParams));
+
+  return res.json({ data: queryParams });
+
+  console.log(queryParams);
 });
