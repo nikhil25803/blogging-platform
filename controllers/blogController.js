@@ -28,7 +28,6 @@ export const createNewBlog = asynchandler(async (req, res) => {
         title: true,
         content: true,
         views: true,
-        likes: true,
         author: {
           select: {
             username: true,
@@ -60,7 +59,6 @@ export const getAllBlogs = asynchandler(async (req, res) => {
       title: true,
       content: true,
       views: true,
-      likes: true,
       author: {
         select: {
           username: true,
@@ -121,7 +119,6 @@ export const updateBlog = asynchandler(async (req, res) => {
         title: true,
         content: true,
         views: true,
-        likes: true,
       },
     });
 
@@ -191,7 +188,6 @@ export const readBlog = asynchandler(async (req, res) => {
       title: true,
       content: true,
       views: true,
-      likes: true,
       author: {
         select: {
           username: true,

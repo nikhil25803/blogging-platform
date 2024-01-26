@@ -167,7 +167,6 @@ export const blogsByUser = asyncHandler(async (req, res) => {
       title: true,
       content: true,
       views: true,
-      likes: true,
       category: {
         select: {
           name: true,

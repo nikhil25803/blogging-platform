@@ -4,7 +4,8 @@ import bodyParser from "body-parser";
 import { userRouter } from "./routes/userRouter.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import { blogRouter } from "./routes/blogRoutes.js";
-
+import helmet from "helmet";
+import cors from "cors";
 // Initialize application
 const app = express();
 
@@ -15,6 +16,9 @@ const PORT = process.env.PORT || 8000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(errorHandler);
+app.use(helmet());
+// Cors can be further API
+app.use(cors());
 
 // Ping Test
 app.get("/", (req, res) => {
