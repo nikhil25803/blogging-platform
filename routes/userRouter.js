@@ -30,7 +30,7 @@ export const userRouter = express.Router();
 userRouter.post("/register", validateBody(createUserSchema), createUser);
 
 // User login
-userRouter.get("/login", validateBody(userLoginSchema), userLogin);
+userRouter.post("/login", validateBody(userLoginSchema), userLogin);
 
 // Read, and delete user
 userRouter.get("/:username", authenticateToken, getUserDetails);

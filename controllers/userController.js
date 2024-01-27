@@ -11,8 +11,9 @@ export const createUser = asyncHandler(async (req, res) => {
 
   // Cehck if all the required body is passed or not
   if (!name || !username || !email || !password) {
-    res.status(400);
-    throw new Error("All fields are required");
+    return res
+      .status(400)
+      .json({ message: "Fields required: username, name, email and password" });
   }
 
   // Create new user
@@ -29,14 +30,15 @@ export const createUser = asyncHandler(async (req, res) => {
         hashedpassword: passwordEncrypted,
       },
     });
-    res.json({
+    return res.json({
       status: 200,
       message: "New User Created",
       data: newUser,
     });
   } catch (error) {
-    res.status(500);
-    throw new Error(`Unable to create new user.\nError: ${error}`);
+    return res
+      .status(500)
+      .json({ message: `Unable to create new user.\nError: ${error}` });
   }
 });
 
@@ -47,7 +49,7 @@ export const userLogin = asyncHandler(async (req, res) => {
 
   // If both fields are not required
   if (!username || !password) {
-    res
+    return res
       .status(400)
       .json({ message: "Both username and password is required to login." });
   }
@@ -82,25 +84,25 @@ export const userLogin = asyncHandler(async (req, res) => {
         );
 
         // User Successfully logged in
-        res.json({
+        return res.json({
           status: 200,
           message: `User: ${username} loggedin.`,
           token: accessToken,
         });
       } else {
-        res.json({
+        return res.json({
           status: 400,
           message: `Password not matched for the username: ${username}`,
         });
       }
     } else {
-      res.json({
+      return res.json({
         status: 404,
         message: `No user found with username: ${username}`,
       });
     }
   } catch (error) {
-    throw new Error("Unable to login user");
+    return res.status(500).json({ message: "Unable to login user" });
   }
 });
 
@@ -111,7 +113,7 @@ export const getUserDetails = asyncHandler(async (req, res) => {
 
   // Check is user is authenticated or not
   if (username !== req.user.username) {
-    res.status(401).json({
+    return res.status(401).json({
       message: `Username: ${username} is either not loggedin or incorrect`,
     });
   }
@@ -132,14 +134,16 @@ export const getUserDetails = asyncHandler(async (req, res) => {
     });
 
     if (user) {
-      res.status(200).json({ message: "User data fetched", data: user });
+      return res.status(200).json({ message: "User data fetched", data: user });
     } else {
-      res
+      return res
         .status(404)
         .json({ message: `No user found with username: ${username}` });
     }
   } catch (error) {
-    res.status(500).json({ message: `Unable to query user.\nError: ${error}` });
+    return res
+      .status(500)
+      .json({ message: `Unable to query user.\nError: ${error}` });
   }
 });
 
@@ -153,7 +157,7 @@ export const blogsByUser = asyncHandler(async (req, res) => {
 
   // Check is user is authenticated or not
   if (username !== userData.username) {
-    res.status(401).json({
+    return res.status(401).json({
       message: `Username: ${username} is either not loggedin or incorrect`,
     });
   }
@@ -164,18 +168,14 @@ export const blogsByUser = asyncHandler(async (req, res) => {
       authorId: userData.uid,
     },
     select: {
+      bid: true,
       title: true,
       content: true,
       views: true,
-      category: {
-        select: {
-          name: true,
-        },
-      },
     },
   });
 
-  res.status(200).json({
+  return res.status(200).json({
     message: "All blogs written by the user has been fetched",
     data: userBlogs,
   });
