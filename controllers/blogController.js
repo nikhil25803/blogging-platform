@@ -2,6 +2,7 @@ import asynchandler from "express-async-handler";
 import { prisma } from "../db/dbConfig.js";
 import { ObjectId } from "bson";
 import { redisCache } from "../config/redis.config.js";
+import { blogsRecommendation } from "../config/blogsRecommendation.js";
 
 export const createNewBlog = asynchandler(async (req, res) => {
   // Get user data from token
@@ -230,6 +231,7 @@ export const readBlog = asynchandler(async (req, res) => {
           },
         ],
         select: {
+          bid: true,
           title: true,
           content: true,
           views: true,
@@ -248,10 +250,14 @@ export const readBlog = asynchandler(async (req, res) => {
         },
       });
 
+      // Get vector data
+      const recommendedBlogs = await blogsRecommendation(popularBlog.bid);
+
       // Return the response
       return res.status(200).json({
         message: "Most popular blogs has been fetched",
         data: popularBlog,
+        recommendations: recommendedBlogs,
       });
     } catch (error) {
       return res
