@@ -60,7 +60,6 @@ export const blogsRecommendation = async (blogid) => {
   existingBLogsData.forEach((blog, index) => {
     tfidf.addDocument(blog.content, index);
     const currentDocumentVector = tfidf.documents[index + 1];
-    console.log(currentDocumentVector);
 
     // Calculate cosine similarity
     const cosineSimilarityValue = cosineSimilarity(
