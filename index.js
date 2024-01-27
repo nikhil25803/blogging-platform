@@ -8,6 +8,8 @@ import helmet from "helmet";
 import cors from "cors";
 import { limiter } from "./config/ratelimiter.js";
 import compression from "compression";
+import { prisma } from "./db/dbConfig.js";
+import { redisCache } from "./config/redis.config.js";
 
 // Initialize application
 const app = express();
@@ -39,6 +41,14 @@ app.use(limiter); // Applied rate limiter
 // Ping Test
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Server is up and running" });
+});
+
+// This endpoint will reset the database and cache
+app.get("/reset", async (req, res) => {
+  redisCache.client.flushdb(() => {});
+  await prisma.user.deleteMany({});
+  await prisma.blog.deleteMany({});
+  res.status(200).json({ message: "Database and cache has been cleared." });
 });
 
 // Add Routers

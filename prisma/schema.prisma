@@ -22,23 +22,14 @@ model User {
   blogsWritten   Blog[]
 }
 
-// Category Model
-model Category {
-  cid   String @id
-  name  String
-  blogs Blog[]
-}
-
 // Blog Posts Model
 model Blog {
-  bid        String   @id
-  title      String
-  content    String
-  views      Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  author     User     @relation(fields: [authorId], references: [uid])
-  authorId   String
-  category   Category @relation(fields: [categoryId], references: [cid])
-  categoryId String
+  bid       String   @id
+  title     String
+  content   String
+  views     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [uid], onDelete: Cascade)
+  authorId  String
 }

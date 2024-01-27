@@ -6,12 +6,14 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "jest": "^29.7.0",
     "prisma": "^5.8.1"
   },
   "dependencies": {
@@ -21,6 +23,7 @@
     "bson": "^6.2.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "express-async-handler": "^1.2.0",
@@ -32,6 +35,7 @@
     "jsonwebtoken": "^9.0.2",
     "natural": "^6.10.4",
     "nodemon": "^3.0.3",
+    "supertest": "^6.3.4",
     "validator": "^13.11.0"
   }
 }

@@ -12,7 +12,7 @@ export const createNewBlog = asynchandler(async (req, res) => {
   const { title, content } = req.body;
 
   if (!title || !content) {
-    res.status(400).json({ message: "Both fields are required" });
+    return res.status(400).json({ message: "Both fields are required" });
   }
 
   try {
@@ -24,9 +24,9 @@ export const createNewBlog = asynchandler(async (req, res) => {
         title: title,
         content: content,
         authorId: userData.uid,
-        categoryId: "65b214e8ecd8b502b111d84f",
       },
       select: {
+        bid: true,
         title: true,
         content: true,
         views: true,
@@ -37,18 +37,13 @@ export const createNewBlog = asynchandler(async (req, res) => {
             email: true,
           },
         },
-        category: {
-          select: {
-            name: true,
-          },
-        },
       },
     });
 
     // Clear cache to fetch latest results
     redisCache.del("/api/blog/all", (err) => {
       if (err) {
-        res
+        return res
           .status(500)
           .json({ message: `Unable to create new blog.\nError: ${error}` });
       }
@@ -83,6 +78,7 @@ export const getAllBlogs = asynchandler(async (req, res) => {
     take: limit,
     skip: skip,
     select: {
+      bid: true,
       title: true,
       content: true,
       views: true,
@@ -91,11 +87,6 @@ export const getAllBlogs = asynchandler(async (req, res) => {
           username: true,
           name: true,
           email: true,
-        },
-      },
-      category: {
-        select: {
-          name: true,
         },
       },
     },
@@ -153,6 +144,7 @@ export const updateBlog = asynchandler(async (req, res) => {
       },
       data: requestBody,
       select: {
+        bid: true,
         title: true,
         content: true,
         views: true,
@@ -242,11 +234,6 @@ export const readBlog = asynchandler(async (req, res) => {
               email: true,
             },
           },
-          category: {
-            select: {
-              name: true,
-            },
-          },
         },
       });
 
@@ -283,29 +270,19 @@ export const readBlog = asynchandler(async (req, res) => {
             email: true,
           },
         },
-        category: {
-          select: {
-            name: true,
-          },
-        },
       },
     });
 
+    const recommendedBlogs = await blogsRecommendation(blogData.bid);
+
     if (blogData) {
-      // If the blog has been read, increase views count
-      await prisma.blog.update({
-        where: {
-          bid: blogId,
-        },
-        data: {
-          views: blogData.views + 1,
-        },
+      return res.status(200).json({
+        message: "Blog data has been fetched.",
+        data: blogData,
+        recommendations: recommendedBlogs,
       });
-      res
-        .status(200)
-        .json({ message: "Blog data has been fetched.", data: blogData });
     } else {
-      res
+      return res
         .status(500)
         .json({ message: `Unable to fetch blog details.\nError: ${error}` });
     }
@@ -342,17 +319,12 @@ export const queryTopNBlogs = asynchandler(async (req, res) => {
             email: true,
           },
         },
-        category: {
-          select: {
-            name: true,
-          },
-        },
       },
     });
 
     // Return the response
     return res.status(200).json({
-      message: "Most popular blogs has been fetched",
+      message: "Top blogs has been fetched",
       data: topNBlogs,
     });
   } catch (error) {
@@ -391,7 +363,7 @@ export const keywordSearchBlog = asynchandler(async (req, res) => {
         },
       });
       return res.status(200).json({
-        message: `Fetched blogs with keyword: ${queryData.title} in content.`,
+        message: `Fetched blogs with keyword: ${queryData.content} in content.`,
         data: blogData,
       });
     } else {
