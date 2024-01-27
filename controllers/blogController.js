@@ -1,6 +1,7 @@
 import asynchandler from "express-async-handler";
 import { prisma } from "../db/dbConfig.js";
 import { ObjectId } from "bson";
+import { redisCache } from "../config/redis.config.js";
 
 export const createNewBlog = asynchandler(async (req, res) => {
   // Get user data from token
@@ -28,7 +29,6 @@ export const createNewBlog = asynchandler(async (req, res) => {
         title: true,
         content: true,
         views: true,
-        likes: true,
         author: {
           select: {
             username: true,
@@ -44,6 +44,15 @@ export const createNewBlog = asynchandler(async (req, res) => {
       },
     });
 
+    // Clear cache to fetch latest results
+    redisCache.del("/api/blog/all", (err) => {
+      if (err) {
+        res
+          .status(500)
+          .json({ message: `Unable to create new blog.\nError: ${error}` });
+      }
+    });
+
     res.status(200).json({ message: "New blog created", data: newBlog });
   } catch (error) {
     res
@@ -54,13 +63,28 @@ export const createNewBlog = asynchandler(async (req, res) => {
 
 // Read all blog posts
 export const getAllBlogs = asynchandler(async (req, res) => {
+  // Get page and number from query parameters
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.number) || 10;
+
+  if (page <= 0) {
+    page = 1;
+  }
+  if (limit <= 0 || limit > 100) {
+    limit = 10;
+  }
+
+  // Records to skip
+  const skip = (page - 1) * limit;
+
   // Get all blogs fromo the database
   const blogs = await prisma.blog.findMany({
+    take: limit,
+    skip: skip,
     select: {
       title: true,
       content: true,
       views: true,
-      likes: true,
       author: {
         select: {
           username: true,
@@ -76,9 +100,19 @@ export const getAllBlogs = asynchandler(async (req, res) => {
     },
   });
 
-  res
-    .status(200)
-    .json({ message: "All records has been fetched", data: blogs });
+  // Calculating total pages from lmits and  count in DB records
+  const totalBlogs = await prisma.blog.count();
+  const totalPages = Math.ceil(totalBlogs / limit);
+
+  res.status(200).json({
+    message: "All records has been fetched",
+    data: blogs,
+    metadata: {
+      totalPages,
+      currentPage: page,
+      currentLimit: limit,
+    },
+  });
 });
 
 // Update a blog
@@ -121,8 +155,16 @@ export const updateBlog = asynchandler(async (req, res) => {
         title: true,
         content: true,
         views: true,
-        likes: true,
       },
+    });
+
+    // Clear cache for this route
+    redisCache.del(`/api/blog?blogid=${blogId}`, (err) => {
+      if (err) {
+        res
+          .status(500)
+          .json({ message: `Unable to create new blog.\nError: ${error}` });
+      }
     });
 
     // Response
@@ -175,53 +217,140 @@ export const deleteBlog = asynchandler(async (req, res) => {
 
 // Read a blog
 export const readBlog = asynchandler(async (req, res) => {
-  // Get blog id from query param
-  const blogId = req.query.blogid;
+  // Get query parameters
+  const queryParams = req.query;
 
-  if (!blogId) {
-    res.status(400).json({ message: "Please provide blog id" });
-  }
-
-  // Query the blog in the database
-  const blogData = await prisma.blog.findUnique({
-    where: {
-      bid: blogId,
-    },
-    select: {
-      title: true,
-      content: true,
-      views: true,
-      likes: true,
-      author: {
+  if (queryParams.mostviewed && queryParams.mostviewed === "true") {
+    // Query the most viewed blog from the DB
+    try {
+      const popularBlog = await prisma.blog.findFirst({
+        orderBy: [
+          {
+            views: "desc",
+          },
+        ],
         select: {
-          username: true,
-          name: true,
-          email: true,
+          title: true,
+          content: true,
+          views: true,
+          author: {
+            select: {
+              username: true,
+              name: true,
+              email: true,
+            },
+          },
+          category: {
+            select: {
+              name: true,
+            },
+          },
         },
-      },
-      category: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+      });
 
-  if (blogData) {
-    // If the blog has been read, increase views count
-    await prisma.blog.update({
+      // Return the response
+      return res.status(200).json({
+        message: "Most popular blogs has been fetched",
+        data: popularBlog,
+      });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: `Unable to fetch mostviewed blog.\nError: ${error}` });
+    }
+  } else if (queryParams.blogid) {
+    const blogId = queryParams.blogid;
+
+    // Query the blog in the database
+    const blogData = await prisma.blog.findUnique({
       where: {
         bid: blogId,
       },
-      data: {
-        views: blogData.views + 1,
+      select: {
+        title: true,
+        content: true,
+        views: true,
+        author: {
+          select: {
+            username: true,
+            name: true,
+            email: true,
+          },
+        },
+        category: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
-    res
-      .status(200)
-      .json({ message: "Blog data has been fetched.", data: blogData });
+
+    if (blogData) {
+      // If the blog has been read, increase views count
+      await prisma.blog.update({
+        where: {
+          bid: blogId,
+        },
+        data: {
+          views: blogData.views + 1,
+        },
+      });
+      res
+        .status(200)
+        .json({ message: "Blog data has been fetched.", data: blogData });
+    } else {
+      res
+        .status(500)
+        .json({ message: `Unable to fetch blog details.\nError: ${error}` });
+    }
   } else {
-    res
+    return res.status(400).json({
+      message:
+        "Please provide one of the query parameters. (mostviewed / blogid)",
+    });
+  }
+});
+
+// Query Top N Blogs
+export const queryTopNBlogs = asynchandler(async (req, res) => {
+  // Get value from path parameter and convert the into number (By Default Top 10 Blogs)
+  const topn = Number(req.params.n) || 10;
+
+  // Try to fetch the results
+  try {
+    const topNBlogs = await prisma.blog.findMany({
+      take: topn,
+      orderBy: [
+        {
+          views: "desc",
+        },
+      ],
+      select: {
+        title: true,
+        content: true,
+        views: true,
+        author: {
+          select: {
+            username: true,
+            name: true,
+            email: true,
+          },
+        },
+        category: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    // Return the response
+    return res.status(200).json({
+      message: "Most popular blogs has been fetched",
+      data: topNBlogs,
+    });
+  } catch (error) {
+    return res
       .status(500)
       .json({ message: `Unable to fetch blog details.\nError: ${error}` });
   }
