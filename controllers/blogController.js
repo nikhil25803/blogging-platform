@@ -63,8 +63,24 @@ export const createNewBlog = asynchandler(async (req, res) => {
 
 // Read all blog posts
 export const getAllBlogs = asynchandler(async (req, res) => {
+  // Get page and number from query parameters
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.number) || 10;
+
+  if (page <= 0) {
+    page = 1;
+  }
+  if (limit <= 0 || limit > 100) {
+    limit = 10;
+  }
+
+  // Records to skip
+  const skip = (page - 1) * limit;
+
   // Get all blogs fromo the database
   const blogs = await prisma.blog.findMany({
+    take: limit,
+    skip: skip,
     select: {
       title: true,
       content: true,
@@ -84,9 +100,19 @@ export const getAllBlogs = asynchandler(async (req, res) => {
     },
   });
 
-  res
-    .status(200)
-    .json({ message: "All records has been fetched", data: blogs });
+  // Calculating total pages from lmits and  count in DB records
+  const totalBlogs = await prisma.blog.count();
+  const totalPages = Math.ceil(totalBlogs / limit);
+
+  res.status(200).json({
+    message: "All records has been fetched",
+    data: blogs,
+    metadata: {
+      totalPages,
+      currentPage: page,
+      currentLimit: limit,
+    },
+  });
 });
 
 // Update a blog
@@ -287,12 +313,45 @@ export const readBlog = asynchandler(async (req, res) => {
 
 // Query Top N Blogs
 export const queryTopNBlogs = asynchandler(async (req, res) => {
-  // Get the query parameters
-  const queryParams = req.query;
+  // Get value from path parameter and convert the into number (By Default Top 10 Blogs)
+  const topn = Number(req.params.n) || 10;
 
-  console.log(Object.keys(queryParams));
+  // Try to fetch the results
+  try {
+    const topNBlogs = await prisma.blog.findMany({
+      take: topn,
+      orderBy: [
+        {
+          views: "desc",
+        },
+      ],
+      select: {
+        title: true,
+        content: true,
+        views: true,
+        author: {
+          select: {
+            username: true,
+            name: true,
+            email: true,
+          },
+        },
+        category: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
 
-  return res.json({ data: queryParams });
-
-  console.log(queryParams);
+    // Return the response
+    return res.status(200).json({
+      message: "Most popular blogs has been fetched",
+      data: topNBlogs,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: `Unable to fetch blog details.\nError: ${error}` });
+  }
 });

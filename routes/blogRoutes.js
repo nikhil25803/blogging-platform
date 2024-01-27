@@ -53,4 +53,4 @@ blogRouter.delete("/delete", authenticateToken, deleteBlog);
 blogRouter.get("/", redisCache.route(), readBlog);
 
 // Query blogs
-blogRouter.get("/query", queryTopNBlogs);
+blogRouter.get("/top/:n", queryTopNBlogs);
