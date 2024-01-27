@@ -3,6 +3,7 @@ import {
   createNewBlog,
   deleteBlog,
   getAllBlogs,
+  keywordSearchBlog,
   queryTopNBlogs,
   readBlog,
   updateBlog,
@@ -54,3 +55,6 @@ blogRouter.get("/", redisCache.route(), readBlog);
 
 // Query blogs
 blogRouter.get("/top/:n", queryTopNBlogs);
+
+// Keyword search
+blogRouter.get("/search", keywordSearchBlog);

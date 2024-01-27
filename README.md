@@ -25,3 +25,7 @@ Design and implementation of a more complex system for a blogging platform. With
 - Testing:
   - Write comprehensive unit tests covering the new features and algorithms.
   - Include tests for performance under various scenarios.
+
+### Recommendations
+
+A simplified approach using TF-IDF (Term Frequency-Inverse Document Frequency) for content analysis and cosine similarity for finding related posts. This approach is a common and relatively straightforward method for content-based recommendation.

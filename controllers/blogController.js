@@ -2,6 +2,7 @@ import asynchandler from "express-async-handler";
 import { prisma } from "../db/dbConfig.js";
 import { ObjectId } from "bson";
 import { redisCache } from "../config/redis.config.js";
+import { blogsRecommendation } from "../config/blogsRecommendation.js";
 
 export const createNewBlog = asynchandler(async (req, res) => {
   // Get user data from token
@@ -230,6 +231,7 @@ export const readBlog = asynchandler(async (req, res) => {
           },
         ],
         select: {
+          bid: true,
           title: true,
           content: true,
           views: true,
@@ -248,10 +250,14 @@ export const readBlog = asynchandler(async (req, res) => {
         },
       });
 
+      // Get vector data
+      const recommendedBlogs = await blogsRecommendation(popularBlog.bid);
+
       // Return the response
       return res.status(200).json({
         message: "Most popular blogs has been fetched",
         data: popularBlog,
+        recommendations: recommendedBlogs,
       });
     } catch (error) {
       return res
@@ -349,6 +355,50 @@ export const queryTopNBlogs = asynchandler(async (req, res) => {
       message: "Most popular blogs has been fetched",
       data: topNBlogs,
     });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: `Unable to fetch blog details.\nError: ${error}` });
+  }
+});
+
+// Keyword based query
+export const keywordSearchBlog = asynchandler(async (req, res) => {
+  // Get data from query params
+  const queryData = req.query;
+
+  try {
+    if (queryData.title) {
+      // Fetch data
+      const blogData = await prisma.blog.findMany({
+        where: {
+          title: {
+            search: queryData.title,
+          },
+        },
+      });
+      return res.status(200).json({
+        message: `Fetched blogs with title keyword: ${queryData.title} in title.`,
+        data: blogData,
+      });
+    } else if (queryData.content) {
+      // Fetch data
+      const blogData = await prisma.blog.findMany({
+        where: {
+          content: {
+            search: queryData.content,
+          },
+        },
+      });
+      return res.status(200).json({
+        message: `Fetched blogs with keyword: ${queryData.title} in content.`,
+        data: blogData,
+      });
+    } else {
+      return res.status(400).json({
+        message: "Please provide either of title or content query value.",
+      });
+    }
   } catch (error) {
     return res
       .status(500)

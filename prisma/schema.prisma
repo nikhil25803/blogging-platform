@@ -1,6 +1,7 @@
 // Generators
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 // Data Sources
@@ -30,15 +31,14 @@ model Category {
 
 // Blog Posts Model
 model Blog {
-  bid         String   @id
-  title       String
-  content     String
-  views       Int      @default(0)
-  isPublished Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  author      User     @relation(fields: [authorId], references: [uid])
-  authorId    String
-  category    Category @relation(fields: [categoryId], references: [cid])
-  categoryId  String
+  bid        String   @id
+  title      String
+  content    String
+  views      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  author     User     @relation(fields: [authorId], references: [uid])
+  authorId   String
+  category   Category @relation(fields: [categoryId], references: [cid])
+  categoryId String
 }
