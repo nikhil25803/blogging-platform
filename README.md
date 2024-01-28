@@ -1,31 +1,145 @@
-# Blogging Platform API
+## Blogging Platform API
 
-Design and implementation of a more complex system for a blogging platform. With features like caching, rate-limiting, data modelling and some algorithmic features as well.
+Design and implementation of a more complex system for a blogging platform. The platform should allow users to create, read, update, and delete blog posts, but with additional features like recommendations on currently viewed blogs and keyword searches.
 
-# TODOs
+## Tech Stacks
 
-- Users (CRUD)
-- Blog (CRUD)
-- Database POSTGRESQL
-- ORM PRISMA
-- Caching Redis
-- Advanced API Endpoints:
-  - Create an endpoint to retrieve the latest N blog posts, with N being a configurable parameter.
-  - Implement a search functionality that allows users to search for blog posts based on keywords in the title or content.
-  - Add a feature to track and return the most popular blog posts based on the number of views.
-- Data modelling and entitty relationship
-- Algorithmic Challenge:
-  - Implement a feature that recommends related blog posts based on the content of the currently viewed post.
-  - Optimize the algorithm for recommending related posts to ensure it scales well.
-- Middleware and Performance:
-  - Implement middleware to compress API responses for improved performance.
-  - Optimize database queries for efficiency and consider asynchronous processing where applicable.
-- Security:
-  - Implement advanced security measures such as rate limiting, request validation, and protection against common web vulnerabilities.
-- Testing:
-  - Write comprehensive unit tests covering the new features and algorithms.
-  - Include tests for performance under various scenarios.
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white) ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
 
-### Recommendations
+## Features
 
-A simplified approach using TF-IDF (Term Frequency-Inverse Document Frequency) for content analysis and cosine similarity for finding related posts. This approach is a common and relatively straightforward method for content-based recommendation.
+- Token-based authentication and authorization for users.
+- CRUD operation on blogs.
+- Endpoint to retrieve the **latest N blog posts**, with N being a configurable parameter.
+- A search functionality that allows users to **search** for blog posts based on **keywords in the title or content**.
+- A feature to track and return the **most popular blog posts** based on the number of views.
+- Implemented a feature that **recommends related blog** posts based on the content of the currently viewed post based on the `cosine similarity` concept.
+- Added middleware to **compress API responses** for improved performance.
+- Optimized database queries for efficiency and considered **asynchronous processing** where applicable.
+- Wrote **comprehensive unit tests** covering the new features and algorithms
+- Implemented advanced security measures such as **rate limiting**, **request validation**, and protection against common web vulnerabilities.
+
+## Project setup
+
+- Clone the repository
+
+  ```bash
+  https://github.com/nikhil25803/blogging-platform
+  ```
+
+- Configure environment variables
+  Add a `.env` and add values mentioned in `.env.template`
+
+  ```bash
+  DATABASE_URL=
+  PORT=
+  JWT_ACCESS_TOKEN=
+  REDIS_HOST=
+  REDIS_PORT=
+  ```
+
+- Install dependencies
+
+  ```bash
+  npm i
+  ```
+
+- Migrate schema to database using prisma
+
+  ```bash
+  npx prisma migrate dev --name init
+  ```
+
+**Note** - Make sure the DB and Redis are connected properly.
+
+- Run test
+  This command will run and test all the API endpoints. Will clear and reset the database
+
+  ```bash
+  npm run test
+  ```
+
+- Run the server
+
+  ```
+  npm run dev
+  ```
+
+## Recommendation Engine
+
+A simplified approach using TF-IDF (Term Frequency-Inverse Document Frequency) for content analysis and **cosine similarity** for finding related posts. This approach is a common and relatively straightforward method for content-based recommendation.
+
+A glimpse into code used to generate content-based recommendations.
+
+```js
+// Function to calculate cosine similarity between two vectors
+const cosineSimilarity = (vectorA, vectorB) => {
+  // Calculate dot product
+  const dotProduct = Object.keys(vectorA).reduce((acc, term) => {
+    if (vectorB[term]) {
+      acc += vectorA[term] * vectorB[term];
+    }
+    return acc;
+  }, 0);
+
+  // Calculate Euclidean norms
+  const normA = Math.sqrt(
+    Object.values(vectorA).reduce((acc, val) => acc + val ** 2, 0)
+  );
+  const normB = Math.sqrt(
+    Object.values(vectorB).reduce((acc, val) => acc + val ** 2, 0)
+  );
+
+  // Calculate cosine similarity
+  const similarity = dotProduct / (normA * normB);
+
+  return similarity;
+};
+
+const blogsRecommendation = async (blogid) => {
+  // Fetch content of current blogs
+  const blogData = await prisma.blog.findFirst({
+    where: {
+      bid: blogid,
+    },
+  });
+
+  // Get content of the blog
+  const blogContent = blogData.content.toLowerCase();
+
+  // Current post vector data
+  tfidf.addDocument(blogContent, -1);
+
+  const cuurentBlogVector = tfidf.documents[0];
+
+  // Get content of all existing blogs except current blog
+  const existingBLogsData = await prisma.blog.findMany({
+    where: {
+      bid: {
+        not: blogid,
+      },
+    },
+  });
+
+  // List to store recommended blogs based on cosine similarity calculation
+  const recommendedBLogs = [];
+
+  existingBLogsData.forEach((blog, index) => {
+    tfidf.addDocument(blog.content, index);
+    const currentDocumentVector = tfidf.documents[index + 1];
+
+    // Calculate cosine similarity
+    const cosineSimilarityValue = cosineSimilarity(
+      cuurentBlogVector,
+      currentDocumentVector
+    );
+
+    // Add blog in recommendation blog in this list if cosine score is > 0.2
+    if (cosineSimilarityValue >= 0.2) {
+      recommendedBLogs.push(blog);
+    }
+  });
+
+  return recommendedBLogs;
+};
+```
