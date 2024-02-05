@@ -147,6 +147,63 @@ export const getUserDetails = asyncHandler(async (req, res) => {
   }
 });
 
+// Update user details
+export const updateUser = asyncHandler(async (req, res) => {
+  // Get user details
+  const userData = req.user;
+
+  // Collect username from query parameter
+  const username = req.params.username;
+
+  // Check is user is authenticated or not
+  if (username !== userData.username) {
+    return res.status(401).json({
+      message: `Username: ${username} is either not loggedin or incorrect`,
+    });
+  }
+
+  // Collect data to update from request body
+  const requestBody = req.body;
+
+  // Validate email -  should not already exists
+  if (requestBody.email) {
+    const emailCheck = await prisma.user.findFirst({
+      where: {
+        email: requestBody.email,
+      },
+    });
+    if (emailCheck) {
+      return res.status(401).json({
+        message: `An user with email: ${userData.email} already exists!`,
+      });
+    }
+  }
+
+  // Update the user data
+  try {
+    const updatedUserData = await prisma.user.update({
+      where: {
+        username: username,
+      },
+      data: requestBody,
+      select: {
+        username: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: `User data has been updated!`,
+      data: updatedUserData,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: `Unable to update user data: ${error}`,
+    });
+  }
+});
+
 // Get all blogs written by the user
 export const blogsByUser = asyncHandler(async (req, res) => {
   // Get user details from the token
@@ -179,4 +236,37 @@ export const blogsByUser = asyncHandler(async (req, res) => {
     message: "All blogs written by the user has been fetched",
     data: userBlogs,
   });
+});
+
+// Delete user
+export const deleteUser = asyncHandler(async (req, res) => {
+  // Get user details
+  const userData = req.user;
+
+  // Collect username from query parameter
+  const username = req.params.username;
+
+  // Check is user is authenticated or not
+  if (username !== userData.username) {
+    return res.status(401).json({
+      message: `Username: ${username} is either not loggedin or incorrect`,
+    });
+  }
+
+  // Delete the user
+  try {
+    await prisma.user.delete({
+      where: {
+        username: username,
+      },
+    });
+
+    return res.status(200).json({
+      message: "User and data has been deleted successfully!",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: `Unable to update user data: ${error}`,
+    });
+  }
 });

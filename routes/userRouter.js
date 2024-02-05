@@ -2,7 +2,9 @@ import express from "express";
 import {
   blogsByUser,
   createUser,
+  deleteUser,
   getUserDetails,
+  updateUser,
   userLogin,
 } from "../controllers/userController.js";
 import { authenticateToken } from "../middlewares/jwtTokenVerification.js";
@@ -23,6 +25,12 @@ const userLoginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
+// User update schema
+const userUpdateSchema = Joi.object({
+  name: Joi.string().optional(),
+  email: Joi.string().optional(),
+});
+
 // Define router
 export const userRouter = express.Router();
 
@@ -32,8 +40,19 @@ userRouter.post("/register", validateBody(createUserSchema), createUser);
 // User login
 userRouter.post("/login", validateBody(userLoginSchema), userLogin);
 
-// Read, and delete user
+// Get user details
 userRouter.get("/:username", authenticateToken, getUserDetails);
 
-// BLogs written by user
+// Update user details()
+userRouter.put(
+  "/:username",
+  validateBody(userUpdateSchema),
+  authenticateToken,
+  updateUser
+);
+
+// Blogs written by user
 userRouter.get("/:username/blog/all", authenticateToken, blogsByUser);
+
+// Delete user
+userRouter.delete("/:username", authenticateToken, deleteUser);
