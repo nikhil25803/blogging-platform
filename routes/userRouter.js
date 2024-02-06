@@ -65,4 +65,9 @@ userRouter.get("/:username/logout", authenticateToken, userLogOut);
 userRouter.delete("/:username", authenticateToken, deleteUser);
 
 // Blogs written by user
-userRouter.get("/:username/blog/all", authenticateToken, blogsByUser);
+userRouter.get(
+  "/:username/blog/all",
+  authenticateToken,
+  redisCache.route(),
+  blogsByUser
+);

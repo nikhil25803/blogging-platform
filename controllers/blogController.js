@@ -1,7 +1,7 @@
 import asynchandler from "express-async-handler";
 import { prisma } from "../db/dbConfig.js";
 import { ObjectId } from "bson";
-import { redisCache } from "../config/redis.config.js";
+import { clearRedisCache } from "../config/redis.config.js";
 import { blogsRecommendation } from "../config/blogsRecommendation.js";
 
 export const createNewBlog = asynchandler(async (req, res) => {
@@ -40,14 +40,10 @@ export const createNewBlog = asynchandler(async (req, res) => {
       },
     });
 
-    // Clear cache to fetch latest results
-    redisCache.del("/api/blog/all", (err) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ message: `Unable to create new blog.\nError: ${error}` });
-      }
-    });
+    // Clear required cache
+    clearRedisCache(`/api/user/${userData.username}/blog/all`);
+    clearRedisCache(`/api/user/${userData.username}`);
+    clearRedisCache("/api/blog/all");
 
     res.status(200).json({ message: "New blog created", data: newBlog });
   } catch (error) {
@@ -151,14 +147,10 @@ export const updateBlog = asynchandler(async (req, res) => {
       },
     });
 
-    // Clear cache for this route
-    redisCache.del(`/api/blog?blogid=${blogId}`, (err) => {
-      if (err) {
-        res
-          .status(500)
-          .json({ message: `Unable to create new blog.\nError: ${error}` });
-      }
-    });
+    // Clear required cache
+    clearRedisCache(`/api/blog?blogid=${blogId}`);
+    clearRedisCache(`/api/user/${userData.username}/blog/all`);
+    clearRedisCache(`/api/user/${userData.username}`);
 
     // Response
     res.status(200).json({
@@ -199,6 +191,10 @@ export const deleteBlog = asynchandler(async (req, res) => {
         bid: blogId,
       },
     });
+
+    clearRedisCache(`/api/blog?blogid=${blogId}`);
+    clearRedisCache(`/api/user/${userData.username}/blog/all`);
+    clearRedisCache(`/api/user/${userData.username}`);
 
     res.status(200).json({ message: "Blog has been deleted" });
   } else {
@@ -244,7 +240,7 @@ export const readBlog = asynchandler(async (req, res) => {
       return res.status(200).json({
         message: "Most popular blogs has been fetched",
         data: popularBlog,
-        recommendations: recommendedBlogs,
+        recommendations: recommendedBlogs.slice(0, 5),
       });
     } catch (error) {
       return res

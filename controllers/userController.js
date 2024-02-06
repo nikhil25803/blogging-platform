@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { ObjectId } from "bson";
 import { prisma } from "../db/dbConfig.js";
 import jwt from "jsonwebtoken";
-import { redisCache } from "../config/redis.config.js";
+import { clearRedisCache, redisCache } from "../config/redis.config.js";
 
 // Add new user
 export const createUser = asyncHandler(async (req, res) => {
@@ -90,7 +90,7 @@ export const userLogin = asyncHandler(async (req, res) => {
             user: user,
           },
           process.env.JWT_ACCESS_TOKEN,
-          { expiresIn: "30m" }
+          { expiresIn: "60m" }
         );
 
         // User Successfully logged in
@@ -205,14 +205,8 @@ export const updateUser = asyncHandler(async (req, res) => {
       },
     });
 
-    // Clear cache to fetch latest user data
-    redisCache.del(`/api/user/${username}`, (err) => {
-      if (err) {
-        return res.status(500).json({
-          message: `Unable to clear cache of user data.\nError: ${err}`,
-        });
-      }
-    });
+    // Clear required cache
+    clearRedisCache(`/api/user/${username}`);
 
     return res.status(200).json({
       message: `User data has been updated!`,
