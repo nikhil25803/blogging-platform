@@ -29,13 +29,17 @@ export function authenticateToken(req, res, next) {
         where: {
           uid: userDetails.uid,
         },
+        select: {
+          isLoggedIn: true,
+        },
       });
 
-      // If user is
-      if (user && user.isLoggedIn === false) {
-        return res.status(400).json({
-          message: "User not loggedin. Please login again!",
-        });
+      if (user) {
+        if (user.isLoggedIn === false) {
+          return res.status(400).json({
+            message: "User not loggedin. Please login again!",
+          });
+        }
       } else {
         return res.status(404).json({
           message: "User does not exist",
