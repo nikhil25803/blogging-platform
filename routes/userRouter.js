@@ -5,6 +5,7 @@ import {
   deleteUser,
   getUserDetails,
   updateUser,
+  userLogOut,
   userLogin,
 } from "../controllers/userController.js";
 import { authenticateToken } from "../middlewares/jwtTokenVerification.js";
@@ -51,8 +52,11 @@ userRouter.put(
   updateUser
 );
 
-// Blogs written by user
-userRouter.get("/:username/blog/all", authenticateToken, blogsByUser);
+// Logout User
+userRouter.get("/:username/logout", authenticateToken, userLogOut);
 
 // Delete user
 userRouter.delete("/:username", authenticateToken, deleteUser);
+
+// Blogs written by user
+userRouter.get("/:username/blog/all", authenticateToken, blogsByUser);

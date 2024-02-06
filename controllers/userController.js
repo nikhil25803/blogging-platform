@@ -79,10 +79,7 @@ export const userLogin = asyncHandler(async (req, res) => {
           },
           select: {
             uid: true,
-            name: true,
             username: true,
-            email: true,
-            isLoggedIn: true,
           },
         });
 
@@ -204,23 +201,12 @@ export const updateUser = asyncHandler(async (req, res) => {
         name: true,
         username: true,
         email: true,
-        isLoggedIn: true,
       },
     });
-
-    // As the user data has been, generate new token with updated data
-    const accessToken = jwt.sign(
-      {
-        user: user,
-      },
-      process.env.JWT_ACCESS_TOKEN,
-      { expiresIn: "30m" }
-    );
 
     return res.status(200).json({
       message: `User data has been updated!`,
       data: updatedUserData,
-      token: accessToken,
     });
   } catch (error) {
     return res.status(500).json({
@@ -292,6 +278,42 @@ export const deleteUser = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: `Unable to update user data: ${error}`,
+    });
+  }
+});
+
+// User Logout
+export const userLogOut = asyncHandler(async (req, res) => {
+  // Get user details
+  const userData = req.user;
+
+  // Collect username from query parameter
+  const username = req.params.username;
+
+  // Check is user is authenticated or not
+  if (username !== userData.username) {
+    return res.status(401).json({
+      message: `Username: ${username} is either not loggedin or incorrect`,
+    });
+  }
+
+  // Logout the user
+  try {
+    await prisma.user.update({
+      where: {
+        username: username,
+      },
+      data: {
+        isLoggedIn: false,
+      },
+    });
+
+    return res.status(200).json({
+      message: "User has been loggedout successfully!",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: `Unable to logout user`,
     });
   }
 });
