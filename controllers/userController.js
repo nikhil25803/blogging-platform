@@ -56,28 +56,40 @@ export const userLogin = asyncHandler(async (req, res) => {
 
   try {
     // Check if user already exists
-    const user = await prisma.user.findUnique({
+    const checkUser = await prisma.user.findUnique({
       where: {
         username: username,
       },
     });
 
-    if (user) {
+    if (checkUser) {
       // Validate password
       const passwordMatched = await bcrypt.compare(
         password,
-        user.hashedpassword
+        checkUser.hashedpassword
       );
       if (passwordMatched) {
+        // Update the login state and return user data for JWT payload
+        const user = await prisma.user.update({
+          where: {
+            username: username,
+          },
+          data: {
+            isLoggedIn: true,
+          },
+          select: {
+            uid: true,
+            name: true,
+            username: true,
+            email: true,
+            isLoggedIn: true,
+          },
+        });
+
         // Generate JWT access token
         const accessToken = jwt.sign(
           {
-            user: {
-              uid: user.uid,
-              username: user.username,
-              name: user.name,
-              email: user.email,
-            },
+            user: user,
           },
           process.env.JWT_ACCESS_TOKEN,
           { expiresIn: "30m" }
@@ -129,6 +141,7 @@ export const getUserDetails = asyncHandler(async (req, res) => {
         username: true,
         name: true,
         email: true,
+        isLoggedIn: true,
         blogsWritten: true,
       },
     });
@@ -187,15 +200,27 @@ export const updateUser = asyncHandler(async (req, res) => {
       },
       data: requestBody,
       select: {
-        username: true,
+        uid: true,
         name: true,
+        username: true,
         email: true,
+        isLoggedIn: true,
       },
     });
+
+    // As the user data has been, generate new token with updated data
+    const accessToken = jwt.sign(
+      {
+        user: user,
+      },
+      process.env.JWT_ACCESS_TOKEN,
+      { expiresIn: "30m" }
+    );
 
     return res.status(200).json({
       message: `User data has been updated!`,
       data: updatedUserData,
+      token: accessToken,
     });
   } catch (error) {
     return res.status(500).json({
