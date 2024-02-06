@@ -19,6 +19,7 @@ model User {
   hashedpassword String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt()
+  isLoggedIn     Boolean  @default(false)
   blogsWritten   Blog[]
 }
 

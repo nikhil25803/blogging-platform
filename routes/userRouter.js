@@ -5,11 +5,13 @@ import {
   deleteUser,
   getUserDetails,
   updateUser,
+  userLogOut,
   userLogin,
 } from "../controllers/userController.js";
 import { authenticateToken } from "../middlewares/jwtTokenVerification.js";
 import Joi from "joi";
 import { validateBody } from "../middlewares/requestValidator.js";
+import { redisCache } from "../config/redis.config.js";
 
 // Create user schema
 const createUserSchema = Joi.object({
@@ -41,7 +43,12 @@ userRouter.post("/register", validateBody(createUserSchema), createUser);
 userRouter.post("/login", validateBody(userLoginSchema), userLogin);
 
 // Get user details
-userRouter.get("/:username", authenticateToken, getUserDetails);
+userRouter.get(
+  "/:username",
+  authenticateToken,
+  redisCache.route(),
+  getUserDetails
+);
 
 // Update user details()
 userRouter.put(
@@ -51,8 +58,16 @@ userRouter.put(
   updateUser
 );
 
-// Blogs written by user
-userRouter.get("/:username/blog/all", authenticateToken, blogsByUser);
+// Logout User
+userRouter.get("/:username/logout", authenticateToken, userLogOut);
 
 // Delete user
 userRouter.delete("/:username", authenticateToken, deleteUser);
+
+// Blogs written by user
+userRouter.get(
+  "/:username/blog/all",
+  authenticateToken,
+  redisCache.route(),
+  blogsByUser
+);
