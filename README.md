@@ -10,6 +10,10 @@ Design and implementation of a more complex system for a blogging platform. The 
 
 A microservices architecture leveraging Docker containers orchestrates `PostgreSQL`, `Node.js API`, and `Redis` instances for scalable and modular application development.
 
+<div style="display: flex; justify-content: center;">
+    <img src="https://github.com/nikhil25803/blogging-platform/assets/93156825/24cefc60-b6d6-4ec3-8f1c-a02afb38005e" alt="Project Architecture">
+</div>
+
 ## Features
 
 - Token-based authentication and authorization for users.
