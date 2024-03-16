@@ -9,13 +9,13 @@ build-image:
 stop-all:
 	- docker stop pgdb
 	- docker stop redis-stack
-	- docker stop blogging-platform-api
+	- docker stop server
 
 .PHONY: rm-all
 rm-all:
 	- docker container rm pgdb
 	- docker container rm redis-stack
-	- docker container rm blogging-platform-api
+	- docker container rm server
 
 .PHONY: create-network
 create-network:
@@ -23,7 +23,11 @@ create-network:
 
 .PHONY: delete-network
 delete-network:
-	docker network rm blog-network
+	@if docker network inspect blog-network >/dev/null 2>&1; then \
+        docker network rm blog-network; \
+    else \
+        echo "Network blog-network does not exist."; \
+    fi
 
 .PHONY: run-db
 run-db:
@@ -49,9 +53,8 @@ run-redis:
 		redis/redis-stack:latest
 
 
-
-.PHONY: run-server
-run-server:
+.PHONY: start-server
+start-server:
 	# Delete existing Docker image if it exists
 	-docker rmi blog-api:0
 	
@@ -60,16 +63,18 @@ run-server:
 	
 	# Run Docker container
 	docker run -d \
-		--name blogging-platform-api \
+		--name server \
 		--network blog-network \
-		-e DATABASE_URL=$$DATABASE_URL \
+		-e DATABASE_URL=postgresql://postgres:nikhil25803@pgdb:5432/postgres?schema=public \
 		-e PORT=$$PORT \
 		-e JWT_ACCESS_TOKEN=$$JWT_ACCESS_TOKEN \
 		-e REDIS_HOST=redis-stack \
 		-e REDIS_PORT=$$REDIS_PORT \
 		-p 8000:8000 \
 		--restart unless-stopped \
-		blog-api:0\
+		blog-api:0
+	
+
 
 .PHONY: run-all
 run-all:
@@ -89,5 +94,4 @@ run-all:
 	$(MAKE) run-redis
 	
 	# Running the Node Server
-	$(MAKE) run-server
-
+	$(MAKE) start-server
