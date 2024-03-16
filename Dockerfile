@@ -16,8 +16,7 @@ COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
-# RUN npx prisma migrate dev --name init
 
 EXPOSE 8000
 
-CMD [ "npm", "start" ]
+CMD [ "npm", "run", "start:migrate:prod" ]
