@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  pgdb:
+    image: postgres:15.1-alpine
+    container_name: pgdb
+    networks:
+      - my-network
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis-stack:
+    image: redis:latest
+    container_name: redis-stack
+    networks:
+      - my-network
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+
+  blogging-platform-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: blog-api:0
+    container_name: blogging-platform-api
+    networks:
+      - my-network
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: ${PORT}
+      JWT_ACCESS_TOKEN: ${JWT_ACCESS_TOKEN}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+networks:
+  my-network:
