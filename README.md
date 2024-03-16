@@ -4,7 +4,11 @@ Design and implementation of a more complex system for a blogging platform. The 
 
 ## Tech Stacks
 
-![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white) ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white) ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+
+## Microservices Architecture
+
+A microservices architecture leveraging Docker containers orchestrates `PostgreSQL`, `Node.js API`, and `Redis` instances for scalable and modular application development.
 
 ## Features
 
@@ -21,22 +25,46 @@ Design and implementation of a more complex system for a blogging platform. The 
 
 ## Project setup
 
-- Clone the repository
+### Clone the repository
+
+```bash
+https://github.com/nikhil25803/blogging-platform
+```
+
+### Configure environment variables
+
+Add a `.env` and add values mentioned in `.env.template`
+
+```bash
+PORT=...
+JWT_ACCESS_TOKEN=...
+REDIS_HOST=...
+REDIS_PORT=...
+POSTGRESDB_USER=...
+POSTGRESDB_ROOT_PASSWORD=...
+POSTGRESDB_DATABASE=...
+POSTGRESDB_LOCAL_PORT=...
+POSTGRESDB_DOCKER_PORT=...
+DATABASE_URL=postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}
+```
+
+### Using Docker
+
+- Start up the services
 
   ```bash
-  https://github.com/nikhil25803/blogging-platform
+  docker-compose up
   ```
 
-- Configure environment variables
-  Add a `.env` and add values mentioned in `.env.template`
+- Stop and remove the containers created
 
   ```bash
-  DATABASE_URL=
-  PORT=
-  JWT_ACCESS_TOKEN=
-  REDIS_HOST=
-  REDIS_PORT=
+  docker-compose down --rmi all
   ```
+
+- You can now access the server on `localhost:8000`
+
+### Manual
 
 - Install dependencies
 
@@ -50,7 +78,7 @@ Design and implementation of a more complex system for a blogging platform. The 
   npx prisma migrate dev --name init
   ```
 
-**Note** - Make sure the DB and Redis are connected properly.
+- **Note** - Make sure the DB and Redis are running properly, and make changes in the `.env` file properly.
 
 - Run test
   This command will run and test all the API endpoints. Will clear and reset the database

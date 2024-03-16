@@ -90,4 +90,3 @@ run-all:
 	
 	# Running the Node Server
 	$(MAKE) run-server
-
