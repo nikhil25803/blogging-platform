@@ -1,6 +1,6 @@
 ## Blogging Platform API
 
-Design and implementation of a more complex system for a blogging platform. The platform should allow users to create, read, update, and delete blog posts, but with additional features like recommendations on currently viewed blogs and keyword searches.
+The Blogging Platform API utilizes a microservices architecture with NodeJS, Express.js, Postgres, and Redis, facilitating CRUD operations, authentication, keyword search, and recommendation features. It emphasizes performance optimization, security measures, and scalability via Docker orchestration and thorough unit testing.
 
 ## Tech Stacks
 
