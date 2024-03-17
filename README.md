@@ -11,7 +11,7 @@ The Blogging Platform API utilizes a microservices architecture with NodeJS, Exp
 A microservices architecture leveraging Docker containers orchestrates `PostgreSQL`, `Node.js API`, and `Redis` instances for scalable and modular application development.
 
 <div style="display: flex; justify-content: center;">
-    <img src="https://github.com/nikhil25803/blogging-platform/assets/93156825/24cefc60-b6d6-4ec3-8f1c-a02afb38005e" alt="Project Architecture">
+    <img src="https://github.com/nikhil25803/blogging-platform/assets/93156825/ba56ffb9-e7a8-4a13-bc70-aa05fcfa498b" alt="Project Architecture">
 </div>
 
 ## Features
